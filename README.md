@@ -2,7 +2,7 @@
 This repository contians the dataset and Physics-Guided Continual Learning (PGCL) code reported in the manuscript [Published Journal Link].
 
 ## [DataProcessing](DataProcessing/) Folder 
-The folder contians the raw dataset (`ID 780 Cell Dataset.xlsx`) documenting the aqueous organic redox flow battery (AORFB) performance with various sampled Aqueous soluble organic (ASO) materials. The data is generated using a 3D interdigiated (ID) cell model with a area of 780 cm^2. It also comes with files for data processing and visualization (input parameters vs. Voltage/Energy Efficiency(EE)).
+The folder contians the raw dataset (`ID 780 Cell Dataset.xlsx`) documenting the aqueous organic redox flow battery (AORFB) performance with various sampled Aqueous soluble organic (ASO) materials. The data is generated using a 3D interdigiated (ID) cell model with a area of 780 cm^2. It also comes with files (`Data_Processing_Voltage.m`and`Data_Processing_EE.m`) for data processing and visualization (input parameters vs. Voltage/Energy Efficiency(EE)).
 
 
 ## [PGCL](PGCL/) Folder
@@ -12,7 +12,7 @@ This folder contains following items:
 - PGCL performance evaluations
 - PGCL tested with DHP isomerstesting
 
-The code is developed and tested using Python 3.9 and PyTorch 1.12.1 in the Spyder IDE. The Elastic Weight Consolidation (EWC) and Learning without Forgetting (LwF) methods implemented in this project are adapted from Vincezo Lomonaco et al. [1].
+The codes are developed and tested using Python 3.9 and PyTorch 1.12.1 in the Spyder IDE. The Elastic Weight Consolidation (EWC) and Learning without Forgetting (LwF) methods implemented in this project are adapted from Vincezo Lomonaco et al. [1].
 
 ## Authors
     - Yucheng Fu
