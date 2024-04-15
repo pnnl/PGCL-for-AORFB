@@ -60,7 +60,7 @@ DEVICE ='cpu'
 
 save_path = 'Image and Data'
 if not os.path.exists(save_path):
-    os.makedirs(save_pathh)
+    os.makedirs(save_path)
 
 # %% Load Training Data for Catastrophic Forgetting
 RepeatTimes = 1
