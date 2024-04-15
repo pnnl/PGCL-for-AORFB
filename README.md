@@ -1,6 +1,10 @@
 # Physics-Guided Continual Learning for Aqueous Organic Redox Flow Battery
 This repository contians the dataset and the code generated for predicting the aqueous organic redox flow battery (AORFB) performance with emerging Aqueous soluble organic (ASO) materials. The results have been reported in the manuscript [Published Journal Link].
 
+# Data Generation 
+
+
+# PGCL Code
 
 
 
