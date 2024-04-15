@@ -5,12 +5,15 @@ This repository contians the dataset and Physics-Guided Continual Learning (PGCL
 The `` contians raw dataset documenting the aqueous organic redox flow battery (AORFB) performance with various sampled Aqueous soluble organic (ASO) materials. The data is generated using a 3D interdigiated (ID) cell model with a area of 780 cm^2. 
 
 
-## PGCL Code
-The `PGCL\` contains the code for catastrophic forgetting demo and PGCL testing with various setup. 
+## [PGCL](PGCL/) Folder
+The folder contains the code for catastrophic forgetting demo and PGCL testing with various setup. 
 
 
 
-
+## Authors
+    - Yucheng Fu
+    - Amanda Howard
+    - Panos Stinis
 
 
 
