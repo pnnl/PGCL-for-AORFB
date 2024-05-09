@@ -155,13 +155,13 @@ def plot_task_error(lists_to_plot, legend_name, save_file_name, ylim=None, figsi
     plt.show()
 
 
-legend_name = ['Divide Task by $\\alpha_n$','Divide Task by $E_n$','Dvide Task by EE'] 
+legend_name = ['Divide Task by $\\alpha_n$','Divide Task by $E_n$','Divide Task by EE'] 
 SaveFigName = 'EE_EWC_Method_Compare.jpg'
 lists_to_plot = [accs_ewc_rep_SH1[0], accs_ewc_rep_SH2[0], accs_ewc_rep_SH3[0]]
 plot_task_error(lists_to_plot, legend_name, SaveFigName , ylim=None, figsize=(4,3))
     
     
-legend_name = ['Divide Task by $\\alpha_n$','Divide Task by $E_n$','Dvide Task by EE'] 
+legend_name = ['Divide Task by $\\alpha_n$','Divide Task by $E_n$','Divide Task by EE'] 
 SaveFigName = 'EE_LwF_Method_Compare.jpg'
 lists_to_plot = [accs_LwF_rep1[0], accs_LwF_rep2[0], accs_LwF_rep3[0]]
 plot_task_error(lists_to_plot, legend_name, SaveFigName , ylim=None, figsize=(4,3))
