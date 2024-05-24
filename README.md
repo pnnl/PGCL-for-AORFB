@@ -1,5 +1,5 @@
 # Physics-Guided Continual Learning for Aqueous Organic Redox Flow Battery
-This repository contians the dataset and Physics-Guided Continual Learning (PGCL) code reported in the manuscript [Published Journal Link].
+This repository contians the dataset and Physics-Guided Continual Learning (PGCL) code reported in [ACS Energy Letters](https://pubs.acs.org/doi/10.1021/acsenergylett.4c00493).
 
 ## [DataProcessing](DataProcessing/) Folder 
 The folder contians the raw dataset (`ID 780 Cell Dataset.xlsx`) documenting the aqueous organic redox flow battery (AORFB) performance with various sampled Aqueous soluble organic (ASO) materials. The data is generated using a 3D interdigiated (ID) cell model with a area of 780 cm^2. It also comes with files (`Data_Processing_Voltage.m`and`Data_Processing_EE.m`) for data processing and visualization (input parameters vs. Voltage/Energy Efficiency(EE)).
