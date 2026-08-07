@@ -4,8 +4,8 @@
 Demonstration of Catastrophic Forgetting when Using ML wihtout CL
 @author: Yucheng Fu
 Package Version Used
-python 3.9
-pytorch 1.12.1
+Python 3.11.9
+PyTorch 2.3.0
 """
 # %% Import Modules
 
@@ -54,7 +54,6 @@ import os
 
 # %% Set random seed and device
 SEED = 2023
-# 2023 good so far
 set_seed(seed=SEED)
 DEVICE ='cpu'
 
@@ -64,6 +63,7 @@ if not os.path.exists(save_path):
 
 # %% Load Training Data for Catastrophic Forgetting
 RepeatTimes = 1
+TrainingEpochs = 100
 data= sio.loadmat('Voltage_Data.mat')
 data = data['data'][0:]
 data = data[np.random.choice(data.shape[0], data.shape[0], replace=False), :]
@@ -97,16 +97,37 @@ Division_method = 'Input' # Select task division method and parameter
 Para_Select = 8;
 task_data = task_division(X,y, Division_method, tasks_num,Para_Select)
 
-# %% No Regulated CNN
+# %% No Regulated DNN
 tasks_num = 5;
-_,_, SC_pre = CNN(InputLen, task_data, tasks_num, RepeatTimes, SC_test)
+accs_dnn, _, SC_pre = CNN(
+    InputLen, task_data, tasks_num, RepeatTimes, SC_test,
+    num_epochs=TrainingEpochs
+)
 
-# %%EWC Method
-ewc_lambda = 0.001
+# %% EWC Method
+ewc_lambda = 5.0
 tasks_num = 5;
-_,_, accs_ewc_rep_ex_pre,_= EWC_SH(InputLen, task_data, tasks_num, RepeatTimes, ewc_lambda,DEVICE,SC_test)
+accs_ewc, _, accs_ewc_rep_ex_pre, _ = EWC_SH(
+    InputLen, task_data, tasks_num, RepeatTimes, ewc_lambda, DEVICE, SC_test,
+    num_epochs=TrainingEpochs
+)
 
-# %% Plot for CNN
+# %% Direct catastrophic-forgetting metric: task-1 MSE after every update
+dnn_task1_mse = np.asarray([
+    [repeat_results[task_id][0] for task_id in range(tasks_num)]
+    for repeat_results in accs_dnn
+])
+ewc_task1_mse = np.asarray([
+    [repeat_results[task_id][0] for task_id in range(tasks_num)]
+    for repeat_results in accs_ewc
+])
+
+dnn_forgetting = dnn_task1_mse[:, -1] - dnn_task1_mse[:, 0]
+ewc_forgetting = ewc_task1_mse[:, -1] - ewc_task1_mse[:, 0]
+print(f'DNN task-1 forgetting (MSE increase): {np.mean(dnn_forgetting):.6f}')
+print(f'EWC task-1 forgetting (MSE increase): {np.mean(ewc_forgetting):.6f}')
+
+# %% Plot for DNN
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MultipleLocator
@@ -216,3 +237,4 @@ ax.set_ylim([1, 2])
 plt.show()
 
 
+# %%
