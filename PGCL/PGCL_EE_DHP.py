@@ -3,8 +3,8 @@
 @author: Yucheng Fu
 Testing the PGCL capability for predicting unseen ASO materials. Using the DHP isomer as an example
 Package Version Used
-python 3.9
-pytorch 1.12.1
+Python 3.11.9
+PyTorch 2.3.0
 Tested in Spyder
 """
 # %% Import Modules
@@ -242,17 +242,10 @@ def plot_task_error(lists_to_plot, legend_name, save_file_name, ylim=None, figsi
                     fmt='none', capsize=3, color=scatter_colors[i % len(line_styles)], zorder=1)
 
     ax.set_xlabel('Batch Number', fontsize=12)
-    ax.set_ylabel('Seen Batch Averaged Error [%]', fontsize=12)
+    ax.set_ylabel('Seen-Batch Average MSE', fontsize=12)
     ax.legend(fontsize=10)
     if ylim is not None:
         ax.set_ylim(ylim)
-    # Apply the percentage formatter to the y-axis
-    def to_percent(y, position):
-        s = "{:.1f}".format(100 * y)
-        return s + '%'
-    formatter = plt.FuncFormatter(to_percent)
-    ax.yaxis.set_major_formatter(formatter)
-
     # Define the subfolder path
     subfolder_path = 'Image and Data'
     if not os.path.exists(subfolder_path):
@@ -372,8 +365,6 @@ for spine in ax.spines.values():
     spine.set_linewidth(2)
 ax.grid(True, which='both', linestyle='-', linewidth=0.7)
 plt.legend()
-plt.ylim([5,25])
 plt.grid(True)
 plt.show()
-
 

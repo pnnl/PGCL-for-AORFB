@@ -3,8 +3,8 @@
 Demonstration the importance of task division strategy in determing the Conintual Learning Accuracy
 @author: Yucheng Fu
 Package Version Used
-python 3.9
-pytorch 1.12.1
+Python 3.11.9
+PyTorch 2.3.0
 Tested in Spyder
 """
 # %% Import Modules
@@ -136,17 +136,10 @@ def plot_task_error(lists_to_plot, legend_name, save_file_name, ylim=None, figsi
                     fmt='none', capsize=3, color=scatter_colors[i], zorder=1)
 
     ax.set_xlabel('Number of Tasks', fontsize=8)
-    ax.set_ylabel('Seen Task Average Error [%]', fontsize=8)
+    ax.set_ylabel('Seen-Task Average MSE', fontsize=8)
     ax.legend(fontsize=10)
     if ylim is not None:
         ax.set_ylim(ylim)
-    # Apply the percentage formatter to the y-axis
-    def to_percent(y, position):
-        s = "{:.1f}".format(100 * y)
-        return s + '%'
-    formatter = plt.FuncFormatter(to_percent)
-    ax.yaxis.set_major_formatter(formatter)
-
     # Define the subfolder path
     subfolder_path = 'Image and Data'
     if not os.path.exists(subfolder_path):

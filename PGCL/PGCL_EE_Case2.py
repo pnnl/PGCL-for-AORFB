@@ -2,8 +2,8 @@
 """
 Testing PGCL by Task Division of 16, two input parameters
 @author: Yucheng Fu
-python 3.9
-pytorch 1.12.1
+Python 3.11.9
+PyTorch 2.3.0
 Tested in Spyder
 """
 # %% Import Modules
@@ -222,17 +222,10 @@ def plot_task_error(lists_to_plot, legend_name, save_file_name, ylim=None, figsi
                     fmt='none', capsize=3, color=scatter_colors[i % len(line_styles)], zorder=1)
 
     ax.set_xlabel('Batch Number', fontsize=12)
-    ax.set_ylabel('Seen Batch Averaged Error [%]', fontsize=12)
+    ax.set_ylabel('Seen-Batch Average MSE', fontsize=12)
     ax.legend(fontsize=10)
     if ylim is not None:
         ax.set_ylim(ylim)
-    # Apply the percentage formatter to the y-axis
-    def to_percent(y, position):
-        s = "{:.1f}".format(100 * y)
-        return s + '%'
-    formatter = plt.FuncFormatter(to_percent)
-    ax.yaxis.set_major_formatter(formatter)
-
     # Define the subfolder path
     subfolder_path = 'Image and Data'
     if not os.path.exists(subfolder_path):
@@ -298,8 +291,7 @@ plot_task_error(lists_to_plot, legend_name, SaveFigName , ylim=None, figsize=(4,
 
 legend_name = ['CL (EWC)','PGCL (EWC)'] 
 SaveFigName = ''
-lists_to_plot = [np.sum(np.cumsum(times_ewc_rep, axis = 1), axis = 0),np.sum(np.cumsum(times_ewc_rep_int, axis = 1), axis = 0)]
+lists_to_plot = [np.mean(np.cumsum(times_ewc_rep, axis=1), axis=0),
+                 np.mean(np.cumsum(times_ewc_rep_int, axis=1), axis=0)]
 plot_task_error_1D(lists_to_plot, legend_name, SaveFigName , ylim=None, figsize=(4,3))
-
-
 

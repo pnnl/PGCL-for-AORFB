@@ -4,8 +4,8 @@ Testing the PGCL capability for predicting unseen ASO materials during hypotheti
 Using the DHP isomer as an example
 @author: Yucheng Fu
 Package Version Used
-python 3.9
-pytorch 1.12.1
+Python 3.11.9
+PyTorch 2.3.0
 IDE Spyder
 """
 # %% Import Modules
@@ -231,7 +231,6 @@ for i, (label, indices) in enumerate(sets.items(), start=1):
 
 plt.tight_layout()  
 plt.show()
-
 
 
 
