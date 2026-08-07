@@ -69,7 +69,7 @@ def Division_by_Input(X,y, tasks_num, Para_Select):
     for task_id in range(tasks_num):
         task_classes_arr[task_id] = (task_lowbound+task_id*task_interval, task_lowbound+(task_id+1)*task_interval )
         mask = np.where((X[:,Para_Select] >= task_classes_arr[task_id][0] )&
-                        (X[:,Para_Select] < task_classes_arr[task_id][1]) ) 
+                        (X[:,Para_Select] < task_classes_arr[task_id][1]) )
         print(len(mask[0]))
         tempX = X[mask,:].squeeze()
         tempy = y[mask]
@@ -88,7 +88,7 @@ def Division_by_Output(X,y, tasks_num):
     for task_id in range(tasks_num):
         task_classes_arr[task_id] = (task_lowbound+task_id*task_interval, task_lowbound+(task_id+1)*task_interval )
         mask = np.where((y >= task_classes_arr[task_id][0] )&
-                        (y < task_classes_arr[task_id][1]) ) 
+                        (y < task_classes_arr[task_id][1]) )
         print(len(mask[0]))
         tempX = X[mask,:].squeeze()
         tempy = y[mask]

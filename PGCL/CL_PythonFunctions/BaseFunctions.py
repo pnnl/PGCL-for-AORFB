@@ -166,12 +166,12 @@ class FHeadNet(nn.Module):
 
 
 # train the model
-def train_model(train_dl, model):
+def train_model(train_dl, model, num_epochs=500):
     # define the optimization
     criterion = MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
     # enumerate epochs
-    for epoch in range(500):
+    for epoch in range(num_epochs):
         # enumerate mini batches
         for i, (inputs, targets) in enumerate(train_dl):
             # clear the gradients

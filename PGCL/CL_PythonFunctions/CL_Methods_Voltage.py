@@ -6,9 +6,10 @@ Functions for CL and PGCL for Voltage Predictions
 from BaseFunctions import *
 from DeviceSetting import *
 import time
+import copy
 
 # DNN naive CL Implementation
-def CNN(InputLen, task_data, tasks_num, RepeatTimes, extra_testing=None):
+def CNN(InputLen, task_data, tasks_num, RepeatTimes, extra_testing=None, num_epochs=500):
     accs_naive_rep = []
     # Initialize these lists only if extra_testing is provided
     if extra_testing is not None:
@@ -27,7 +28,7 @@ def CNN(InputLen, task_data, tasks_num, RepeatTimes, extra_testing=None):
         for task_id in range(tasks_num):
             train, test = task_data[task_id]
             start_time = time.time()
-            train_model(train, model)
+            train_model(train, model, num_epochs=num_epochs)
             training_time = time.time() - start_time
 
             accs_subset = []
@@ -65,42 +66,49 @@ def CNN(InputLen, task_data, tasks_num, RepeatTimes, extra_testing=None):
 def on_task_update_SH(task_id, train, model, fisher_dict, optpar_dict):
    # define the optimization
     model.train()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
-    optimizer.zero_grad()
     # define the optimization
     criterion = MSELoss()
     # enumerate mini batches
-    for i, (inputs, targets) in enumerate(train):
-      # compute the model output
-      yhat = model(inputs)
-      # calculate loss
-      loss = criterion(yhat, targets)
-      # credit assignment
+    device = next(model.parameters()).device
+    fisher = {name: torch.zeros_like(param) for name, param in model.named_parameters()}
+    sample_count = 0
+    for inputs, targets in train:
+      model.zero_grad(set_to_none=True)
+      yhat = model(inputs.to(device))
+      loss = criterion(yhat, targets.to(device))
       loss.backward()
+      batch_size = inputs.shape[0]
+      sample_count += batch_size
+      for name, param in model.named_parameters():
+        if param.grad is not None:
+          fisher[name] += param.grad.detach().pow(2) * batch_size
+    if sample_count == 0:
+      raise ValueError("Cannot estimate Fisher information from an empty task")
   
     fisher_dict[task_id] = {}
     optpar_dict[task_id] = {}
     # gradients accumulated can be used to calculate fisher
     for name, param in model.named_parameters():
-      optpar_dict[task_id][name] = param.data.clone()
-      fisher_dict[task_id][name] = param.grad.data.clone().pow(2)
+      optpar_dict[task_id][name] = param.detach().clone()
+      fisher_dict[task_id][name] = fisher[name] / sample_count
 
 # We also need to modify our train function to add the new regularization loss:
-def train_ewc_SH(model, task_id, train, ewc_lambda, fisher_dict, optpar_dict):
+def train_ewc_SH(model, task_id, train, ewc_lambda, fisher_dict, optpar_dict, num_epochs=100):
 
     # define the optimization
     criterion = MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
+    device = next(model.parameters()).device
     # enumerate epochs
-    for epoch in range(100):
+    for epoch in range(num_epochs):
       # enumerate mini batches
         for i, (inputs, targets) in enumerate(train):
             # clear the gradients
             optimizer.zero_grad()
             # compute the model output
-            yhat = model(inputs)
+            yhat = model(inputs.to(device))
             # calculate loss
-            loss = criterion(yhat, targets)
+            loss = criterion(yhat, targets.to(device))
             
             ### magic here! :-)
             for task in range(task_id):
@@ -112,7 +120,8 @@ def train_ewc_SH(model, task_id, train, ewc_lambda, fisher_dict, optpar_dict):
             optimizer.step()
     print(f"EWC_SH Task: {task_id+1}, Trained Epoch: {epoch+1} \tLoss: {loss.item():.6f}")
 
-def EWC_SH(InputLen, task_data_with_overlap, tasks_num, RepeatTimes, ewc_lambda, DEVICE, extra_testing = None):
+def EWC_SH(InputLen, task_data_with_overlap, tasks_num, RepeatTimes, ewc_lambda, DEVICE,
+           extra_testing=None, num_epochs=100):
     accs_ewc_rep_SH = []
     training_times_rep = []  # New list to store training times
     
@@ -122,7 +131,7 @@ def EWC_SH(InputLen, task_data_with_overlap, tasks_num, RepeatTimes, ewc_lambda,
         
         
     for repeat in range(0, RepeatTimes):
-        model = MLP(InputLen)
+        model = MLP(InputLen).to(DEVICE)
         accs_ewc_SH = []
         training_times = []  # New list to store training times for each task
 
@@ -140,7 +149,8 @@ def EWC_SH(InputLen, task_data_with_overlap, tasks_num, RepeatTimes, ewc_lambda,
 
             # Train the model (with the new head) on the current task
             start_time = time.time()
-            train_ewc_SH(model, task_id, train, ewc_lambda, fisher_dict, optpar_dict)
+            train_ewc_SH(model, task_id, train, ewc_lambda, fisher_dict, optpar_dict,
+                         num_epochs=num_epochs)
             on_task_update_SH(task_id, train, model, fisher_dict, optpar_dict)
             training_time = time.time() - start_time
             training_times.append(training_time)
@@ -186,79 +196,69 @@ from torch.nn import MSELoss
 import time
 import numpy as np
 
-def train_LwF(train, model, task_id, LwF_lambda, lr, num_epochs):
+def train_LwF(train, model, task_id, LwF_lambda, lr, num_epochs, teacher=None):
     criterion = MSELoss()
-    optimizer = []
-    for task in range(task_id + 1):
-        tempopt = optim.Adam(model[task].parameters(), lr=lr)
-        optimizer.append(tempopt)
+    device = next(model.parameters()).device
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+
+    model.train()
+    if teacher is not None:
+        teacher.eval()
+        for param in teacher.parameters():
+            param.requires_grad_(False)
     
     # enumerate epochs
     for epoch in range(num_epochs):
         # enumerate mini batches
-        for i, (inputs, targets) in enumerate(train):
+        for inputs, targets in train:
+            inputs, targets = inputs.to(device), targets.to(device)
             # clear the gradients
-            for task in range(task_id + 1):
-                optimizer[task].zero_grad()
+            optimizer.zero_grad()
             
-            loss_old = torch.tensor(0.0)
-            for task in range(task_id):
-                targets_old = model[task](inputs)
-                loss_old += criterion(targets, targets_old)
-            
-            targets_new = model[task_id](inputs)
-            loss_new = criterion(targets, targets_new)
-            if task_id > 0:
-                loss = LwF_lambda * loss_old + loss_new
-            else:
+            predictions = model(inputs)
+            loss_new = criterion(predictions, targets)
+            if teacher is None:
                 loss = loss_new
+            else:
+                with torch.no_grad():
+                    old_predictions = teacher(inputs)
+                loss_old = criterion(predictions, old_predictions)
+                loss = loss_new + LwF_lambda * loss_old
             
             loss.backward()
-            for task in range(task_id + 1):
-                optimizer[task].step()
+            optimizer.step()
     
     print(f"LwF Task: {task_id + 1}, Trained Epoch: {epoch + 1} \tLoss: {loss.item():.6f}")
 
 def LwF_V(InputLen, task_data_with_overlap, tasks_num, LwF_lambda, RepeatTimes, DEVICE, lr, num_epochs):
     accs_LwF_rep = []
-    accs_LwF_rep_v2 = []
     training_times_rep = []
 
     for repeat in range(RepeatTimes):
-        base = MLP_MH(InputLen)  # Assuming this is defined elsewhere
-        heads = []
+        model = MLP(InputLen).to(DEVICE)
         accs_LwF = []
-        accs_LwF_v2 = []
         training_times = []
 
         for task_id in range(tasks_num):
             train, test = task_data_with_overlap[task_id]
-            model = FHeadNet(base).to(DEVICE)  # Assuming FHeadNet is defined elsewhere
-            heads.append(model)
-            
+            teacher = copy.deepcopy(model) if task_id > 0 else None
             start_time = time.time()
-            train_LwF(train, heads, task_id, LwF_lambda, lr, num_epochs)
+            train_LwF(train, model, task_id, LwF_lambda, lr, num_epochs, teacher)
             training_time = time.time() - start_time
             training_times.append(training_time)
 
             accs_subset = []
-            accs_subset_v2 = []
             for i in range(task_id + 1):
                 _, test = task_data_with_overlap[i]
-                mse, predictions, actuals = evaluate_model(test, heads[i])  # Assuming evaluate_model is defined elsewhere
+                mse, predictions, actuals = evaluate_model(test, model)
                 accs_subset.append(mse)
-                mse2, predictions2, actuals2 = evaluate_model(test, heads[task_id])
-                accs_subset_v2.append(mse2)
             
             if task_id < (tasks_num - 1):
                 accs_subset.extend([np.nan] * (tasks_num - 1 - task_id))
-                accs_subset_v2.extend([np.nan] * (tasks_num - 1 - task_id))
             
             accs_LwF.append(accs_subset)
-            accs_LwF_v2.append(accs_subset_v2)
 
         accs_LwF_rep.append(accs_LwF)
-        accs_LwF_rep_v2.append(accs_LwF_v2)
         training_times_rep.append(training_times)
 
     return accs_LwF_rep, training_times_rep
